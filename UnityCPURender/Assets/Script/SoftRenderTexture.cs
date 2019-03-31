@@ -4,7 +4,8 @@ using UnityEngine;
 using System.IO;
 using UnityEditor;
 
-public class SoftRenderTexture  {
+public class SoftRenderTexture
+{
 
     private string path;
     private Texture2D t;

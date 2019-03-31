@@ -9,28 +9,27 @@ using System;
 public class SoftRenderMain : Editor
 {
 
-    private const int width = 50;
-    private const int height = 50;
+    private const int width = 700; //图片宽
+    private const int height = 700; //图片高
 
     SoftRenderInspector sri;
 
     Camera camera;
     Light[] lights;
     MeshFilter[] meshs;
-    List<Vertex> vertexList; //存储顶点shader处理后的顶点(单个mesh
+    List<Vertex> vertexList; //存储顶点(单个mesh)
     List<Triangle> triangleList; //存储三角
     SoftRenderTexture frameBuffer;
 
-    //对于每个顶点
-    Matrix4x4 L2WMat; //local to world matrix
+    Matrix4x4 L2WMat;
     Matrix4x4 MVPMat;
     VAO vao;
 
     Func<v2f, Color> usedShader;
     float[,] depthBuffer = new float[width, height];
-    bool blend =false;
-    SoftRenderTexture dotLightAtten = new SoftRenderTexture("Assets/Resources/dotlight.jpg");
-    //Inspector操作
+    bool blend;
+    SoftRenderTexture dotLightAtten = new SoftRenderTexture("Assets/Scenes/dotlight.jpg");
+
     public override void OnInspectorGUI()
     {
         base.OnInspectorGUI();
@@ -41,12 +40,11 @@ public class SoftRenderMain : Editor
     }
     public void StartCapture()
     {
-        SoftRenderInspector t = (SoftRenderInspector)target;
         sri = target as SoftRenderInspector;
         var mfs = sri.GetComponentsInChildren<MeshFilter>();
         var lights = sri.GetComponentsInChildren<Light>();
         var camera = sri.GetComponentInChildren<Camera>();
-        SoftRenderMain srm = new SoftRenderMain(camera, lights, mfs, t.CaptureSavePath, t.CaptureSaveName);
+        var srm = new SoftRenderMain(camera, lights, mfs, sri.CaptureSavePath, sri.CaptureSaveName);
         srm.DrawFrame();
        
     }
@@ -64,6 +62,7 @@ public class SoftRenderMain : Editor
     {
         this.frameBuffer.Clear(0.2f, 0.3f, 0.4f);
         usedShader = FragShader;
+        //逐mesh画
         foreach (var mesh in meshs)
         {
             L2WMat = mesh.transform.localToWorldMatrix;
@@ -78,14 +77,17 @@ public class SoftRenderMain : Editor
     }
     public void DrawElement()
     {
-        //run vertexshader
+        //Vertexshader：逐顶点
+        Debug.LogError("vertex num :" + vao.vbo.Length);
         for (int i = 0; i < vao.vbo.Length; i++)
         {
             Vertex v = VertShader(vao.vbo[i]);
             vertexList.Add(v);
         }
         //TriangleSetUp
-        for (int i = 0; i < vao.vbo.Length; i+=3)
+        //由于顶点公用的情况，所有ebo会比vertexList大，每三个组成一个三角形
+        Debug.LogError("triangle num :" + vao.ebo.Length / 3);
+        for (int i = 0; i < vao.ebo.Length; i+=3)
         {
             Triangle t = new Triangle(
                 vertexList[vao.ebo[i]],
@@ -94,12 +96,14 @@ public class SoftRenderMain : Editor
                 );
             triangleList.Add(t);
         }
-        //Rasterization
+        //逐三角形
         for (int i = 0; i < triangleList.Count; i++)
         {
+            //Rasterization(片元)
             var fragList = Rast(triangleList[i]);
             foreach (var frag in fragList)
             {
+                //depth test
                 if (frag.z > depthBuffer[frag.x, frag.y] && depthBuffer[frag.x, frag.y] != 0) continue;
                 Color col = usedShader(frag.data);
                 if (blend)
@@ -125,6 +129,7 @@ public class SoftRenderMain : Editor
 
     public class Vertex
     {
+        //x,y,z都是屏幕像素坐标
         public float x;
         public float y;
         public float z;
@@ -207,7 +212,7 @@ public class SoftRenderMain : Editor
     //顶点数组对象
     public class VAO 
     {
-        //note：起到了一个拆解的作用，讲mesh拆成vbo跟ebo
+        //真实的VBO是无差别数据，这里设计成一个数组（顶点）
         public a2v[] vbo;//顶点缓冲对象，存了所有顶点数据
         public int[] ebo;//索引缓冲对象，存了所有顶点索引
         public VAO(MeshFilter mf)
@@ -270,36 +275,39 @@ public class SoftRenderMain : Editor
     //光栅化
     public List<Fragment> Rast(Triangle t)
     {
+        //最小包围盒
         int xMin = (int)Mathf.Min(t[0].x, t[1].x, t[2].x);
         int xMax = (int)Mathf.Max(t[0].x, t[1].x, t[2].x);
         int yMin = (int)Mathf.Min(t[0].y, t[1].y, t[2].y);
         int yMax = (int)Mathf.Max(t[0].y, t[1].y, t[2].y);
         var fragList = new List<Fragment>((xMax - xMin) * (yMax - yMin));
+        //逐每个像素块（xMax - xMin / yMax - yMin）
         for (int m = xMin; m < xMax + 1; m++)
         {
             for (int n = yMin; n < yMax + 1; n++)
             {
-                if (m < 0 || m > width - 1 || n < 0 || n > height - 1) continue;
-                if (!isLeftPoint(t[0], t[1], m + 0.5f, n + 0.5f)) continue;
-                if (!isLeftPoint(t[1], t[2], m + 0.5f, n + 0.5f)) continue;
-                if (!isLeftPoint(t[2], t[0], m + 0.5f, n + 0.5f)) continue;
+                if (m < 0 || n < 0 || m > width - 1 || n > height - 1) continue;
+                //判断像素是否在像素内
+                if (isLeftPoint(t[0], t[1], m + 0.5f, n + 0.5f)) continue;
+                if (isLeftPoint(t[1], t[2], m + 0.5f, n + 0.5f)) continue;
+                if (isLeftPoint(t[2], t[0], m + 0.5f, n + 0.5f)) continue;
                 var frag = new Fragment();
                 frag.x = m;
                 frag.y = n;
-                LerpFragment(t[0], t[1], t[2], frag);
+                LerpFragment(t[0], t[1], t[2], ref frag);
                 fragList.Add(frag);
             }
         }
         return fragList;
     }
-
+    
     public bool isLeftPoint(Vertex a, Vertex b, float x, float y)
     {
         float s = (a.x - x) * (b.y - y) - (a.y - y) * (b.x - x);
-        return s > 0 ? false : true;
+        return s > 0 ? true : false;
     }
-
-    public void LerpFragment(Vertex a, Vertex b, Vertex c, Fragment frag)
+    //插值算出该像素颜色
+    public void LerpFragment(Vertex a, Vertex b, Vertex c, ref Fragment frag)
     {
         for (int i = 0; i < 8; i++)
         {
@@ -331,14 +339,14 @@ public class SoftRenderMain : Editor
         Vertex vert = new Vertex();
         Vector4 svp = a.postion; //SV_POSITION
         svp.w = 1f;//将w设为1表示这是点，而不是向量。w向量便于后面的mvp变换，具体改变w是在投影变换
-        svp = MVPMat * svp;
+        svp = MVPMat * svp;//todo:这里可能运算有问题
         vert.data = v;
         vert.x = (svp.x / svp.w / 2 + 0.5f) * width;//透视除法NDC + 屏幕空间转换 
         vert.y = (svp.y / svp.w / 2 + 0.5f) * height;
         vert.z = (svp.z / svp.w / 2 + 0.5f);
         return vert;//最后返回的是屏幕上的坐标 + 顶点数据（世界坐标，世界法线，UV坐标）
     }
-    
+
     //像素着色器
     Color FragShader(v2f v)
     {
@@ -360,21 +368,8 @@ public class SoftRenderMain : Editor
                     break;
                 case LightType.Point:
                     dis = Vector3.Distance(light.transform.position, v.postion);
-                    if (dis > light.range)
-                    {
-                        //超出点光源范围
-                        continue;
-                    }
-                    try
-                    {
-                        atten = dotLightAtten[(int)(dis / light.range), 2].r;
-                    }
-                    catch (Exception)
-                    {
-
-                        throw;
-                    }
-                        
+                    if (dis > light.range) continue;
+                    atten = dotLightAtten[(int)(dis / light.range), 2].r;
                     lightDir = light.transform.position - v.postion;
                     atten *= Vector3.Dot(Vector3.Normalize(lightDir), Vector3.Normalize(v.normal));
                     atten *= light.intensity;
