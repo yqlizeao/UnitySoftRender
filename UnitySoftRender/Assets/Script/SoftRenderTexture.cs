@@ -32,10 +32,15 @@ public class SoftRenderTexture
         isSaveable = false;
     }
 
+    /// <summary>
+    /// 获取颜色值
+    /// </summary>
+    /// <returns></returns>
     public Color this[int x, int y]
     {
         get
         {
+            //todo：t.GetPixels()是一个一维数组，优先排列width
             if (x > width - 1) x = width - 1;
             if (y > height - 1) y = height - 1;
             return cols[y * width + x];
@@ -45,11 +50,17 @@ public class SoftRenderTexture
             cols[y * width + x] = value;
         }
     }
-
+    /// <summary>
+    /// 获取当前UV颜色值
+    /// </summary>
+    /// <param UV.x="x"></param>
+    /// <param UV.y="y"></param>
+    /// <returns></returns>
     public Color this[float x, float y]
     {
         get
         {
+            //todo:(int)强转会去掉小数部分，那么此处加一个0.49f，也就是尽量去平衡颜色过度
             int m = (int)(x * width + 0.49f);
             int n = (int)(y * height + 0.49f);
             return this[m, n];

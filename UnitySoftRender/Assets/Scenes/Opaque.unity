@@ -202,23 +202,3 @@ PrefabInstance:
     m_RemovedComponents:
     - {fileID: 206237173238785885, guid: 5fe5c51eb5a35cd468cd0c23e6072ae0, type: 3}
   m_SourcePrefab: {fileID: 100100000, guid: 5fe5c51eb5a35cd468cd0c23e6072ae0, type: 3}
---- !u!1 &946595434 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 206237173238785884, guid: 5fe5c51eb5a35cd468cd0c23e6072ae0,
-    type: 3}
-  m_PrefabInstance: {fileID: 946595433}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &946595435
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 946595434}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3c9c78c4b3d84aa4781130d9d837b8dc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  CaptureSavePath: E:\
-  CaptureSaveName: TestCaptureFunction

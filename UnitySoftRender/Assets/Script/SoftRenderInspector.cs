@@ -8,5 +8,7 @@ public class SoftRenderInspector : MonoBehaviour {
     public string CaptureSavePath;
     [SerializeField]
     public string CaptureSaveName;
+    [SerializeField]
+    public bool isTranslucentRender;
 
 }

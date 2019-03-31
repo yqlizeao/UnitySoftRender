@@ -45,7 +45,7 @@ public class SoftRenderMain : Editor
         var lights = sri.GetComponentsInChildren<Light>();
         var camera = sri.GetComponentInChildren<Camera>();
         var srm = new SoftRenderMain(camera, lights, mfs, sri.CaptureSavePath, sri.CaptureSaveName);
-        srm.DrawFrame();
+        srm.DrawFrame(sri.isTranslucentRender);
        
     }
     public SoftRenderMain(Camera camera, Light[] lights, MeshFilter[] mfs, string captureSavePath, string captureSaveName)
@@ -58,9 +58,9 @@ public class SoftRenderMain : Editor
         frameBuffer = new SoftRenderTexture(width, height, captureSavePath, captureSaveName);
     }
 
-    public void DrawFrame()
+    public void DrawFrame(bool render_state)
     {
-        this.frameBuffer.Clear(0.2f, 0.3f, 0.4f);
+        this.frameBuffer.Clear(0.1f, 0.2f, 0.3f);
         usedShader = FragShader;
         //逐mesh画
         foreach (var mesh in meshs)
@@ -68,7 +68,15 @@ public class SoftRenderMain : Editor
             L2WMat = mesh.transform.localToWorldMatrix;
             MVPMat = camera.projectionMatrix * camera.worldToCameraMatrix * L2WMat;
             vao = new VAO(mesh);
-            DrawElement();
+            if (render_state)
+            {
+                DrawFrame_Human();
+            }
+            else
+            {
+                DrawElement();
+            }
+            
             vertexList.Clear();
             triangleList.Clear();
         }
@@ -124,7 +132,29 @@ public class SoftRenderMain : Editor
             }
         }
     }
+    public void DrawFrame_Human()
+    {
+        frameBuffer.Clear(0.1f, 0.1f, 0.1f);
 
+        usedShader = FragShader_Human;
+        L2WMat = meshs[0].transform.localToWorldMatrix;
+        MVPMat = camera.projectionMatrix * camera.worldToCameraMatrix * L2WMat;
+        vao = new VAO(meshs[0]);
+        DrawElement();
+        vertexList.Clear();
+        triangleList.Clear();
+
+        blend = true;
+        usedShader = FragShader_Human_T;
+        L2WMat = meshs[1].transform.localToWorldMatrix;
+        MVPMat = camera.projectionMatrix * camera.worldToCameraMatrix * L2WMat;
+        vao = new VAO(meshs[1]);
+        DrawElement();
+        vertexList.Clear();
+        triangleList.Clear();
+
+        frameBuffer.Save();
+    }
 
 
     public class Vertex
@@ -382,6 +412,35 @@ public class SoftRenderMain : Editor
         return new Color(r, g, b);
     }
 
+    SoftRenderTexture MainTexture = new SoftRenderTexture("Assets/Scenes/Water_Diffuse.jpg");
+    Color FragShader_Human(v2f v)
+    {
+        float r = 0f, g = 0f, b = 0f;
+        float NdotL = 0f;
+        Vector3 lightDir;
+        //todo:
+        Light light = lights[0];
+        Color texture = MainTexture[v.uv.x, v.uv.y];
+        lightDir = -light.transform.forward;
+        NdotL = Vector3.Dot(Vector3.Normalize(lightDir), Vector3.Normalize(v.normal));
+        NdotL = Mathf.Max(0, NdotL);
+        r = light.color.r * NdotL * texture.r;
+        g = light.color.g * NdotL * texture.g;
+        b = light.color.b * NdotL * texture.b;
+        return new Color(r, g, b);
+    }
 
+    Color FragShader_Human_T(v2f v)
+    {
+        Vector3 viewDir = camera.transform.position - v.postion;
+        float rim = 1 - Mathf.Max(0, Vector3.Dot(Vector3.Normalize(v.normal), Vector3.Normalize(viewDir)));
+        float rimPower = Mathf.Pow(rim, 1 / 0.55f);
+        Color texture = MainTexture[v.uv.x, v.uv.y];
+        //basecolor + rimcolor
+        float rimr = 0.77f * rimPower + texture.r * 0.2f;
+        float rimg = 0.77f * rimPower + texture.g * 0.2f;
+        float rimb = 0.77f * rimPower + texture.b * 0.2f;
+        return new Color(rimr, rimg, rimb, 0.55f);
+    }
 
 }

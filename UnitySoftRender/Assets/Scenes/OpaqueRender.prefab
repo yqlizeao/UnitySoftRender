@@ -78,9 +78,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 206237173238785882}
-  - component: {fileID: 206237173238785885}
+  - component: {fileID: 1353801131}
   m_Layer: 0
-  m_Name: Render
+  m_Name: OpaqueRender
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -107,7 +107,7 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &206237173238785885
+--- !u!114 &1353801131
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -116,11 +116,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 206237173238785884}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b8b6a16980ed70b4c865795578057d76, type: 3}
+  m_Script: {fileID: 11500000, guid: 3c9c78c4b3d84aa4781130d9d837b8dc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  SavePath: E:\
-  PicName: frame2
+  CaptureSavePath: E:\
+  CaptureSaveName: OpaqueCapture
+  isTranslucentRender: 0
 --- !u!1 &206237173551854941
 GameObject:
   m_ObjectHideFlags: 0
@@ -161,7 +162,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 206237173551854941}
-  m_Mesh: {fileID: 0}
+  m_Mesh: {fileID: 10208, guid: 0000000000000000e000000000000000, type: 0}
 --- !u!136 &206237173551854939
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -240,7 +241,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 206237173568132690}
   m_LocalRotation: {x: 0.13226521, y: -0.14784242, z: 0.01995503, w: 0.97992367}
-  m_LocalPosition: {x: 0.821, y: 0.954, z: -2.549}
+  m_LocalPosition: {x: 0.65, y: 1.47, z: -2.454}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 206237173238785882}
