@@ -1,5 +1,5 @@
 # UnitySoftRender
 
 > Introduction<br>
-![](http://yqlizeao.55555.io/UnitySoftRender/TestCaptureFunction.png)
+![](https://github.com/yqlizeao/UnitySoftRender/blob/master/TestCaptureFunction.png)
       
