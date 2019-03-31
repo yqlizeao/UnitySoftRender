@@ -1,5 +1,5 @@
 # UnitySoftRender
-=======
+
 Unity软渲染，省掉了Light，Camera，Mesh等对象的实现，以及矩阵相关的数学代码。<br>代码所实现的，是从Unity获取到渲染数据后，输送到C#软渲染器，经历顶点着色器，三角面装配，光栅化，片段着色器，最终画出一帧的过程。
 ## 简介<br>
 [![Badge](https://img.shields.io/badge/github-Zagara-lightgrey.svg)](https://github.com/justalittlefat/Zagara)
